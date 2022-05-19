@@ -11,6 +11,7 @@ import java.util.Date;
 @Setter
 public class Appointment {
 
+
     private static final long serialVersionUID = 1L;
     public static final Integer STATUS_APPOINTMENT = 0;//预约中
     public static final Integer STATUS_ARRIVAL = 1;//已到店
