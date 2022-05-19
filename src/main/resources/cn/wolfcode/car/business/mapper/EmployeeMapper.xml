@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.car.business.mapper.EmployeeMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.car.business.domain.Employee" >
+    <id column="id" property="id" />
+    <result column="name" property="name" />
+    <result column="email" property="email" />
+    <result column="age" property="age" />
+    <result column="admin" property="admin" />
+    <result column="status" property="status" />
+    <result column="dept_id" property="department.id" />
+    <result column="dName" property="department.name" />
+    <result column="hiredate" property="hiredate" />
+    <result column="delete_status" property="deleteStatus" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" >
+    delete from employee
+    where id = #{id}
+  </delete>
+  <update id="deleteStatus">
+    update employee
+    set delete_status = #{deleteStatus}
+    where id = #{id}
+  </update>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id" >
+    insert into employee (name, email, age, admin, status, dept_id, hiredate,delete_status)
+    values (#{name}, #{email}, #{age}, #{admin}, #{status}, #{department.id}, #{hiredate},#{deleteStatus})
+  </insert>
+  <update id="updateByPrimaryKey" >
+    update employee
+    set name = #{name},
+      email = #{email},
+      age = #{age},
+      admin = #{admin},
+      status = #{status},
+      dept_id = #{department.id}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" >
+    select id, name, email, age, admin, status, dept_id, hiredate
+    from employee
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, name, email, age, admin, status, dept_id, hiredate
+    from employee
+  </select>
+  <select id="selectForList" resultMap="BaseResultMap" >
+    select e.id, e.name, e.email, e.age, e.admin, e.status, e.dept_id, e.hiredate, d.name dName
+    from employee e join department d on e.dept_id = d.id
+    <where>
+      <if test="keyword != null and keyword != ''">
+        and e.name like concat('%',#{keyword},'%')
+      </if>
+      <if test="admin != null">
+        and e.admin = #{admin}
+      </if>
+      <if test="status != null">
+        and e.status = #{status}
+      </if>
+      <if test="deptId != null">
+        and e.dept_id = #{deptId}
+      </if>
+      <if test="hiredateStart != null ">
+        and e.hiredate &gt; #{hiredateStart}
+      </if>
+      <if test="hiredateEnd != null ">
+        and e.hiredate &lt; #{hiredateEnd}
+      </if>
+        and e.delete_status = 0
+    </where>
+  </select>
+</mapper>

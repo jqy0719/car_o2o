@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="common/include :: header('员工列表')"/>
+</head>
+<body class="gray-bg">
+<div class="container-div">
+    <div class="row">
+        <div class="col-sm-12 search-collapse">
+            <form id="employee-form">
+                <div class="select-list">
+                    <ul>
+                        <li>
+                            关键字：<input type="text" name="keyword"/>
+                        </li>
+
+
+                        <li>
+                            是否超管：
+                            <select name="admin" th:with="type=${@dict.getType('si_visible')}">
+                                <option value="">所有</option>
+                                <option th:each="dict : ${type}" th:text="${dict.label}"
+                                        th:value="${dict.value}"></option>
+                            </select>
+                        </li>
+
+                        <li>
+                            是否冻结：
+                            <select name="status" th:with="type=${@dict.getType('si_visible')}">
+                                <option value="">所有</option>
+                                <option th:each="dict : ${type}" th:text="${dict.label}"
+                                        th:value="${dict.value}"></option>
+                            </select>
+                        </li>
+                        <div>
+                            <li>
+                                所在部门：
+                                <select name="deptId" >
+                                    <option value="">所有</option>
+                                    <option th:each="department:${departments}" th:text="${department.name}"
+                                            th:value="${department.id}"></option>
+                                </select>
+                            </li>
+                        </div>
+
+                        <li>
+                            <label>入职时间：</label>
+<!--                            <div class="col-sm-8">-->
+<!--                                <div class="input-group date">-->
+                                    <input name="hiredateStart" class="form-control" placeholder="开始时间" type="text" >
+<!--                                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>-->
+<!--                                </div>-->
+<!--                            </div>-->
+                            <span>-</span>
+<!--                            <div class="col-sm-8">-->
+<!--                                <div class="input-group date">-->
+                                    <input name="hiredateEnd" class="form-control" placeholder="结束时间" type="text" >
+<!--                                    <span class="input-group-addon"></i></span>-->
+<!--                                </div>-->
+<!--                            </div>-->
+                        </li>
+                        <li>
+                            <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i
+                                    class="fa fa-search"></i>&nbsp;搜索</a>
+                            <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i
+                                    class="fa fa-refresh"></i>&nbsp;重置</a>
+                        </li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+
+        <div class="btn-group-sm" id="toolbar" role="group">
+            <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="business:employee:add">
+                <i class="fa fa-plus"></i> 新增
+            </a>
+            <a class="btn btn-primary single disabled" onclick="$.operate.edit()"
+               shiro:hasPermission="business:employee:edit">
+                <i class="fa fa-edit"></i> 修改
+            </a>
+            <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()"
+               shiro:hasPermission="business:employee:remove">
+                <i class="fa fa-remove"></i> 删除
+            </a>
+
+        </div>
+
+        <div class="col-sm-12 select-table table-striped">
+            <table id="bootstrap-table"></table>
+        </div>
+    </div>
+</div>
+<th:block th:include="common/include :: footer"/>
+<th:block th:include="common/include :: datetimepicker" />
+<script th:inline="javascript">
+    var editFlag = [[${@permission.hasPermi('business:employee:edit')}]];
+    var removeFlag = [[${@permission.hasPermi('business:employee:remove')}]];
+    var detailFlag = [[${@permission.hasPermi('business:employee:department')}]];
+    var datas = [[${@dict.getType('sys_normal_disable')}]];
+    var sex = [[${@dict.getType('sys_user_sex')}]];
+    var admin = [[${@dict.getType('si_visible')}]];
+    var prefix = ctx + "/business/employee";
+    $(function () {
+        var options = {
+            url: prefix + "/query",
+            createUrl: prefix + "/addPage",
+            updateUrl: prefix + "/editPage?id={id}",
+            removeUrl: prefix + "/remove",
+            exportUrl: prefix + "/export",
+            sortName: "seq",
+            modalName: "员工",
+            columns: [{
+                checkbox: true
+            },
+                {
+                    field: 'id',
+                    title: '员工id',
+                    visible: false
+                },
+                {
+                    field: 'name',
+                    title: '姓名',
+                    sortable: true
+                },
+
+                {
+                    field: 'email',
+                    title: '邮箱',
+                    sortable: true
+                },
+                {
+                    field: 'age',
+                    title: '年龄',
+                    sortable: true
+                },
+
+                {
+                    field: 'admin',
+                    title: '是否超管',
+                    align: 'center',
+                    formatter: function (value, row, index) {
+                        return $.table.selectDictLabel(admin, value);
+                    }
+                },
+                {
+                    field: 'hiredate',
+                    title: '入职时间',
+                    sortable: true
+                },
+                {
+                    field: 'department.name',
+                    title: '所在部门',
+
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function (value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" ' +
+                            'onclick="$.operate.edit(\'' + row.id + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-warning btn-xs '+detailFlag+'" href="javascript:void(0)" ' +
+                            'onclick="detail(\'' + row.department.id + '\')"><i class="fa fa-list-ul"></i>部门详情</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)"' +
+                            ' onclick="$.operate.remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a>');
+                        return actions.join('');
+                    }
+                }]
+        };
+        $.table.init(options);
+    });
+
+    $("input[name='hiredateStart']").datetimepicker({
+        format: "yyyy-mm-dd hh:ii",
+        autoclose: true
+    });
+
+    $("input[name='hiredateEnd']").datetimepicker({
+        format: "yyyy-mm-dd hh:ii",
+        autoclose: true
+    });
+
+    function detail(deptId) {
+
+        var url = ctx + '/business/employee/deptListPage?deptId=' + deptId;
+        $.modal.open("部门详情", url);
+    }
+
+
+</script>
+</body>
+</html>
